@@ -47,11 +47,15 @@ class DataPreprocess(object):
         train_df = pd.read_csv(self.path + 'friends_train.txt', sep='|')
         val_df = pd.read_csv(self.path + 'friends_dev.txt', sep='|')
 
+        '''
+        train contains the speakers and addressees of training split.
+        val contains the speakers and addressees of validation split.
+        '''
         train = [[], []]
         val = [[], []]
         lengths = []
 
-        # Iterate over the questions only of both training and test datasets
+        # Iterate over dialogues and characters of both training and test datasets
         for dataset, data_type in zip([train_df, val_df], [train, val]):
             for index, row in dataset.iterrows():
                 # Iterate through the text of both the dialogues of the row
@@ -74,6 +78,7 @@ class DataPreprocess(object):
                             self.word2count[word] += 1
 
                     # Replace |questions as word| to |question as number| representation
+                    # Add <EOS> token at end of dialogue.
                     dataset.set_value(index, dialogue, d2n + [self.EOS_token])
 
         return train_df, train[0], train[1], val_df, val[0], val[1]
