@@ -1,17 +1,17 @@
 import torch
 import torch.nn as nn
 from torch import Tensor
-from torch.autograd import Variable
 from torch import optim
 import torch.nn.functional as F
 
 class EncoderRNN(nn.Module):
-    def __init__(self, hidden_size, embedding, batch_size=1, use_embedding=False,
+    def __init__(self, hidden_size, embedding, num_layers=1, batch_size=1, use_embedding=False,
                  train_embedding=True):
         super(EncoderRNN, self).__init__()
         self.use_cuda = torch.cuda.is_available()
         self.hidden_size = hidden_size
         self.batch_size = batch_size
+        self.num_layers = num_layers
 
         if use_embedding:
             self.embedding = nn.Embedding(embedding.shape[0], embedding.shape[1])
@@ -24,7 +24,7 @@ class EncoderRNN(nn.Module):
 
         self.embedding.weight.requires_grad = train_embedding
 
-        self.gru = nn.GRU(self.input_size, hidden_size, bidirectional=True)
+        self.gru = nn.GRU(self.input_size, hidden_size, self.num_layers, bidirectional=True)
 
     def forward(self, input, input_lengths, hidden):
         '''
@@ -48,7 +48,7 @@ class EncoderRNN(nn.Module):
 
     def initHidden(self, batch_size=0):
         if batch_size == 0: batch_size = self.batch_size
-        result = Variable(torch.zeros(2, batch_size, self.hidden_size))
+        result = torch.zeros(2 * self.num_layers, batch_size, self.hidden_size)
         if self.use_cuda:
             return result.cuda()
         else:

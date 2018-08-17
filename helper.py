@@ -5,7 +5,7 @@ import torch
 from torch.autograd import Variable
 
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
+# import matplotlib.ticker as ticker
 
 class Helper(object):
     def __init__(self, max_length, PAD_token=0):

@@ -30,10 +30,10 @@ class Attention(nn.Module):
         batch_size = encoder_outputs.size(1)
         H = hidden.repeat(max_len, 1, 1).transpose(0, 1)
         attn_energies = self.score(H, encoder_outputs.transpose(0, 1)) # compute attention score
-        return F.softmax(attn_energies).unsqueeze(1) # normalize with softmax
+        return F.softmax(attn_energies, dim=1).unsqueeze(1) # normalize with softmax
 
     def score(self, hidden, encoder_outputs):
-        energy = F.tanh(self.attn(torch.cat([hidden, encoder_outputs], 2))) # [B, L, 2H]->[B, L, H]
+        energy = torch.tanh(self.attn(torch.cat([hidden, encoder_outputs], 2))) # [B, L, 2H]->[B, L, H]
         energy = energy.transpose(2, 1) # [B, H, L]
         v = self.v.repeat(encoder_outputs.data.shape[0], 1).unsqueeze(1) #[B, 1, H]
         energy = torch.bmm(v, energy).squeeze(1) # [B, L]

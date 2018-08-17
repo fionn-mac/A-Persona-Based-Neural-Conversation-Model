@@ -3,7 +3,6 @@ import random
 
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
 from torch import optim
 
 from dataPreprocess import DataPreprocess
@@ -16,7 +15,7 @@ from helper import Helper
 use_cuda = torch.cuda.is_available()
 
 def trainIters(model, in_seq, out_seq, people, input_lengths, max_length, batch_size=1,
-               n_iters=75, learning_rate=0.01, print_every=1, plot_every=1):
+               n_iters=50, learning_rate=0.001, print_every=1, plot_every=1):
 
     start = time.time()
     plot_losses = []
@@ -34,15 +33,17 @@ def trainIters(model, in_seq, out_seq, people, input_lengths, max_length, batch_
 
     for epoch in range(1, n_iters + 1):
         for i in range(0, samples, batch_size):
-            input_variables = torch.cuda.LongTensor(in_seq[i : i + batch_size]).permute(1, 0) # Sequence Length x Batch Size
-            target_variables = Variable(torch.cuda.LongTensor(out_seq[i : i + batch_size]).permute(1, 0))
+            input_variables = in_seq[i : i + batch_size].permute(1, 0) # Sequence Length x Batch Size
+            target_variables = out_seq[i : i + batch_size].permute(1, 0)
             lengths = input_lengths[i : i + batch_size]
-            speaker = torch.cuda.LongTensor(people[1][i : i + batch_size]).view(1, 1)
+            speaker = people[1][i : i + batch_size].view(1, -1)
 
             loss = model.train(input_variables, target_variables, speaker, lengths,
                                encoder_optimizer, decoder_optimizer, criterion)
             print_loss_total += loss
             plot_loss_total += loss
+
+        evaluateRandomly(train_network, in_seq, out_seq, [speakers, addressees], lengths, index2word, 1)
 
         if epoch % print_every == 0:
             print_loss_avg = print_loss_total / print_every
@@ -67,39 +68,46 @@ def evaluateRandomly(train_network, in_seq, out_seq, people, lengths, index2word
         ind = random.randrange(samples)
         print('>', [index2word[j] for j in in_seq[ind]])
         print('=', [index2word[j] for j in out_seq[ind]])
-        output_words, attentions = evaluate(train_network, torch.cuda.LongTensor([in_seq[ind]]).permute(1, 0),
-                                            torch.cuda.LongTensor([people[1][ind]]).view(1, 1))
+        output_words, attentions = evaluate(train_network, in_seq[ind:ind+1].permute(1, 0), people[1][ind].view(1, -1))
         print('<', output_words)
         print('')
-        helpFn.showAttention([index2word[j] for j in in_seq[ind]], output_words, attentions)
+        # helpFn.showAttention([index2word[j] for j in in_seq[ind]], output_words, attentions)
 
 if __name__ == "__main__":
 
-    hidden_size = 1024
-    batch_size = 1
+    hidden_size = 256
+    batch_size = 32
+    num_layers = 3
+    max_length = 10
 
-    data_preprocess = DataPreprocess("./Datasets/Neural-Dialogue-Generation/data/")
-    max_length = data_preprocess.max_length
+    data_preprocess = DataPreprocess("./Datasets/Friends/", max_length=max_length)
     in_seq = data_preprocess.x_train
     out_seq = data_preprocess.y_train
     lengths = data_preprocess.lengths_train
     speakers = data_preprocess.speaker_list_train
     addressees = data_preprocess.addressee_list_train
+    word2index = data_preprocess.word2index
     index2word = data_preprocess.index2word
+    word2count = data_preprocess.word2count
     vocab_size = data_preprocess.vocab_size
     personas = len(data_preprocess.people) + 1
 
     helpFn = Helper(max_length)
 
-    encoder = EncoderRNN(hidden_size, (vocab_size, 300), batch_size)
-    decoder = DecoderRNN(hidden_size, (vocab_size, 300), (personas, 300))
+    ''' Use pre-trained word embeddings '''
+    embedding = GetEmbedding(word2index, word2count, "../Embeddings/GoogleNews/")
+
+    encoder = EncoderRNN(hidden_size, embedding.embedding_matrix, batch_size=batch_size,
+                         num_layers=num_layers, use_embedding=True, train_embedding=False)
+    decoder = DecoderRNN(hidden_size, embedding.embedding_matrix, (personas, 300),
+                         num_layers=num_layers, use_embedding=True, train_embedding=False, dropout_p=0.1)
 
     if use_cuda:
         encoder = encoder.cuda()
         decoder = decoder.cuda()
 
     print("Training Network.")
-    train_network = TrainNetwork(encoder, decoder, index2word, max_length, batch_size)
-    trainIters(train_network, in_seq, out_seq, [speakers, addressees], lengths, max_length, batch_size)
+    train_network = TrainNetwork(encoder, decoder, index2word, max_length, batch_size=batch_size, num_layers=num_layers)
+    trainIters(train_network, in_seq, out_seq, [speakers, addressees], lengths, max_length, batch_size=batch_size)
 
     evaluateRandomly(train_network, in_seq, out_seq, [speakers, addressees], lengths, index2word)

@@ -1,18 +1,18 @@
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
 from torch import optim
 import torch.nn.functional as F
 
 from attention import Attention
 
 class DecoderRNN(nn.Module):
-    def __init__(self, hidden_size, embedding, personas, use_embedding=False,
+    def __init__(self, hidden_size, embedding, personas, num_layers=1, use_embedding=False,
                  train_embedding=True, dropout_p=0.1):
         super(DecoderRNN, self).__init__()
         self.use_cuda = torch.cuda.is_available()
         self.hidden_size = hidden_size
         self.dropout_p = dropout_p
+        self.num_layers = num_layers
         self.personas = nn.Embedding(personas[0], personas[1])
 
         if use_embedding:
@@ -29,13 +29,13 @@ class DecoderRNN(nn.Module):
         self.embedding.weight.requires_grad = train_embedding
 
         self.attn = Attention('concat', self.hidden_size)
-        self.gru = nn.GRU(self.hidden_size + self.input_size, self.hidden_size)
+        self.gru = nn.GRU(self.hidden_size + self.input_size, self.hidden_size, self.num_layers)
         self.out = nn.Linear(self.hidden_size, self.output_size)
 
     def forward(self, input, speakers, hidden, encoder_outputs, input_lengths):
         '''
         input           -> (1 x Batch Size)
-        speakers        -> (1 x Batch Size, Addressees of inputs to Encoder) 
+        speakers        -> (1 x Batch Size, Addressees of inputs to Encoder)
         hidden          -> (Num. Layers * Num. Directions x Batch Size x Hidden Size)
         encoder_outputs -> (Max Sentence Length, Batch Size, Hidden Size)
         input_lengths   -> (Batch Size (Sorted in decreasing order of lengths))
@@ -56,11 +56,11 @@ class DecoderRNN(nn.Module):
 
         output = output.squeeze(0) # (1, B, V) -> (B, V)
 
-        output = F.log_softmax(self.out(output))
+        output = F.log_softmax(self.out(output), dim=1)
         return output, hidden, attn_weights
 
     def initHidden(self, batch_size):
-        result = Variable(torch.zeros(1, batch_size, self.hidden_size))
+        result = torch.zeros(self.num_layers, batch_size, self.hidden_size)
         if self.use_cuda:
             return result.cuda()
         else:

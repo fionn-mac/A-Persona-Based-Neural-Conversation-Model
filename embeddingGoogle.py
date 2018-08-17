@@ -1,5 +1,8 @@
+import torch
 import numpy as np
 from gensim.models import KeyedVectors
+
+use_cuda = torch.cuda.is_available()
 
 class GetEmbedding(object):
     def __init__(self, word_index, word_count, dir_path, vocab_size=100000):
@@ -23,4 +26,8 @@ class GetEmbedding(object):
             embedding_matrix[i] = word2vec.word_vec(word)
 
         del word2vec
+
+        embedding_matrix = torch.from_numpy(embedding_matrix).type(torch.FloatTensor)
+        if use_cuda: embedding_matrix = embedding_matrix.cuda()
+
         return embedding_matrix
