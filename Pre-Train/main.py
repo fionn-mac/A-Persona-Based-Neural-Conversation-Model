@@ -89,8 +89,8 @@ if __name__ == "__main__":
     parser.add_argument("-b", "--batch_size", type=int, help="Batch Size", default=32)
     parser.add_argument("-l", "--max_length", type=int, help="Maximum Sentence Length.", default=20)
     parser.add_argument("--num_layers", type=int, help="Number of layers in Encoder and Decoder", default=3)
-    parser.add_argument("-d", "--dataset", type=str, help="Dataset directory.", default='./Datasets/OpenSubtitles/')
-    parser.add_argument("-e", "--embedding_file", type=str, help="File containing word embeddings.", default='../Embeddings/GoogleNews/GoogleNews-vectors-negative300.bin.gz')
+    parser.add_argument("-d", "--dataset", type=str, help="Dataset directory.", default='../Datasets/OpenSubtitles/')
+    parser.add_argument("-e", "--embedding_file", type=str, help="File containing word embeddings.", default='../../Embeddings/GoogleNews/GoogleNews-vectors-negative300.bin.gz')
 
     args = parser.parse_args()
 
