@@ -74,7 +74,7 @@ class Data_Preprocess(object):
 
     def sort_by_lengths(self):
         xy_train = sorted(zip(self.x_train, self.y_train), key=lambda tup: len(tup[0]), reverse=True)
-        xy_val = sorted(zip(self.x_val, self.y_val, key=lambda tup: len(tup[0]), reverse=True)
+        xy_val = sorted(zip(self.x_val, self.y_val), key=lambda tup: len(tup[0]), reverse=True)
 
         for i, tup in enumerate(xy_train):
             self.x_train[i] = tup[0]
