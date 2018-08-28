@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 from attention import Attention
 
-class DecoderRNN(nn.Module):
+class Decoder_RNN(nn.Module):
     def __init__(self, hidden_size, embedding, personas, num_layers=1, use_embedding=False,
                  train_embedding=True, dropout_p=0.1):
         super(DecoderRNN, self).__init__()

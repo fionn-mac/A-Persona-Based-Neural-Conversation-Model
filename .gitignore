@@ -1,2 +1,6 @@
 __pycache__
 Datasets/Neural-Dialogue-Generation/
+Datasets/OpenSubtitles/Files/
+Datasets/OpenSubtitles/osdb_*
+Datasets/OpenSubtitles/subtitles.txt
+Datasets/OpenSubtitles/vocabulary.txt

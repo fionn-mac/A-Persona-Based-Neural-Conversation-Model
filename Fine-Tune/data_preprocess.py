@@ -7,7 +7,9 @@ import torch
 import numpy as np
 import pandas as pd
 
-class DataPreprocess(object):
+from nltk import word_tokenize
+
+class Data_Preprocess(object):
     def __init__(self, path, max_length=10):
         self.path = path
         self.PAD_token = 0
@@ -92,13 +94,6 @@ class DataPreprocess(object):
         for i, tup in enumerate(xysa_train):
             self.x_train[i] = tup[0]
             self.y_train[i] = tup[1]
-
-            ''' Padding at beginning of sequence '''
-            length_x = len(self.x_train[i])
-            self.x_train[i] = [self.PAD_token]*(self.max_length - length_x) + self.x_train[i]
-            length_y = len(self.y_train[i])
-            self.y_train[i] = [self.PAD_token]*(self.max_length - length_y) + self.y_train[i]
-
             self.speaker_list_train[i] = tup[2]
             self.addressee_list_train[i] = tup[3]
             self.lengths_train.append(len(self.x_train[i]))
@@ -106,16 +101,9 @@ class DataPreprocess(object):
         for i, tup in enumerate(xysa_val):
             self.x_val[i] = tup[0]
             self.y_val[i] = tup[1]
-
-            ''' Padding at beginning of sequence '''
-            length_x = len(self.x_val[i])
-            self.x_val[i] = [self.PAD_token]*(self.max_length - length_x) + self.x_val[i]
-            length_y = len(self.y_val[i])
-            self.y_val[i] = [self.PAD_token]*(self.max_length - length_y) + self.y_val[i]
-
             self.speaker_list_val[i] = tup[2]
             self.addressee_list_val[i] = tup[3]
-            self.lengths_val.append(len(self.y_train[i]))
+            self.lengths_val.append(len(self.x_val[i]))
 
     def get_people(self):
         people = self.speaker_list_train + self.speaker_list_val +\
@@ -144,17 +132,9 @@ class DataPreprocess(object):
         self.sort_by_lengths()
         self.get_people()
 
-        self.x_train = torch.LongTensor(self.x_train)
-        self.y_train = torch.LongTensor(self.y_train)
-        self.x_val = torch.LongTensor(self.x_val)
-        self.y_val = torch.LongTensor(self.y_val)
         self.speaker_list_train = torch.LongTensor(self.speaker_list_train)
         self.addressee_list_train = torch.LongTensor(self.addressee_list_train)
 
         if self.use_cuda:
-            self.x_train = self.x_train.cuda()
-            self.y_train = self.y_train.cuda()
-            self.x_val = self.x_val.cuda()
-            self.y_val = self.y_val.cuda()
             self.speaker_list_train = self.speaker_list_train.cuda()
             self.addressee_list_train = self.addressee_list_train.cuda()

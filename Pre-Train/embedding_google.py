@@ -4,17 +4,16 @@ from gensim.models import KeyedVectors
 
 use_cuda = torch.cuda.is_available()
 
-class GetEmbedding(object):
-    def __init__(self, word_index, word_count, dir_path, vocab_size=100000):
-        self.dir_path = dir_path
+class Get_Embedding(object):
+    def __init__(self, word_index, word_count, file_path, vocab_size=100000):
+        self.file_path = file_path
         self.embedding_matrix = self.create_embed_matrix(word_index, word_count,
                                                          vocab_size)
 
     def create_embed_matrix(self, word_index, word_count, vocab_size):
-        print('Preparing Embedding Matrix.')
+        ''' Assuming embedding to be in the form of KeyedVectors '''
+        word2vec = KeyedVectors.load_word2vec_format(self.file_path, binary=True)
 
-        file_name = self.dir_path + 'GoogleNews-vectors-negative300.bin.gz'
-        word2vec = KeyedVectors.load_word2vec_format(file_name, binary=True)
         # prepare embedding matrix
         num_words = min(vocab_size, len(word_index) + 1)
         embedding_matrix = np.zeros((num_words, 300))

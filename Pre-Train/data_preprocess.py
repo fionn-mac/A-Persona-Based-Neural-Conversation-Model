@@ -1,3 +1,4 @@
+from os import path
 from io import open
 import unicodedata
 import re
@@ -9,7 +10,7 @@ import pandas as pd
 
 from nltk import word_tokenize
 
-class DataPreprocess(object):
+class Data_Preprocess(object):
     def __init__(self, path, max_length=10):
         self.path = path
         self.PAD_token = 0
@@ -41,8 +42,8 @@ class DataPreprocess(object):
 
     def load_dialogues(self):
         # Load training and test set
-        train_df = pd.read_csv(self.path + 'osdb_train.txt', sep='|')
-        val_df = pd.read_csv(self.path + 'osdb_dev.txt', sep='|')
+        train_df = pd.read_csv(path.join(self.path, 'osdb_train.txt'), sep='|')
+        val_df = pd.read_csv(path.join(self.path, 'osdb_dev.txt'), sep='|')
 
         lengths = []
 
@@ -72,32 +73,18 @@ class DataPreprocess(object):
         return train_df, val_df
 
     def sort_by_lengths(self):
-        xysa_train = sorted(zip(self.x_train, self.y_train), key=lambda tup: len(tup[0]), reverse=True)
-        xysa_val = sorted(zip(self.x_val, self.y_val, key=lambda tup: len(tup[0]), reverse=True)
+        xy_train = sorted(zip(self.x_train, self.y_train), key=lambda tup: len(tup[0]), reverse=True)
+        xy_val = sorted(zip(self.x_val, self.y_val, key=lambda tup: len(tup[0]), reverse=True)
 
-        for i, tup in enumerate(xysa_train):
+        for i, tup in enumerate(xy_train):
             self.x_train[i] = tup[0]
             self.y_train[i] = tup[1]
-
-            ''' Padding at beginning of sequence '''
-            length_x = len(self.x_train[i])
-            self.x_train[i] = [self.PAD_token]*(self.max_length - length_x) + self.x_train[i]
-            length_y = len(self.y_train[i])
-            self.y_train[i] = [self.PAD_token]*(self.max_length - length_y) + self.y_train[i]
-
             self.lengths_train.append(len(self.x_train[i]))
 
-        for i, tup in enumerate(xysa_val):
+        for i, tup in enumerate(xy_val):
             self.x_val[i] = tup[0]
             self.y_val[i] = tup[1]
-
-            ''' Padding at beginning of sequence '''
-            length_x = len(self.x_val[i])
-            self.x_val[i] = [self.PAD_token]*(self.max_length - length_x) + self.x_val[i]
-            length_y = len(self.y_val[i])
-            self.y_val[i] = [self.PAD_token]*(self.max_length - length_y) + self.y_val[i]
-
-            self.lengths_val.append(len(self.y_train[i]))
+            self.lengths_val.append(len(self.x_val[i]))
 
     def run(self):
         print('Loading vocabulary.')
@@ -116,14 +103,3 @@ class DataPreprocess(object):
         self.y_val = x_val.dialogue2.values.tolist()
 
         self.sort_by_lengths()
-
-        self.x_train = torch.LongTensor(self.x_train)
-        self.y_train = torch.LongTensor(self.y_train)
-        self.x_val = torch.LongTensor(self.x_val)
-        self.y_val = torch.LongTensor(self.y_val)
-
-        if self.use_cuda:
-            self.x_train = self.x_train.cuda()
-            self.y_train = self.y_train.cuda()
-            self.x_val = self.x_val.cuda()
-            self.y_val = self.y_val.cuda()

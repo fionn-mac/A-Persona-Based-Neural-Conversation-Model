@@ -4,7 +4,7 @@ from torch import Tensor
 from torch import optim
 import torch.nn.functional as F
 
-class EncoderRNN(nn.Module):
+class Encoder_RNN(nn.Module):
     def __init__(self, hidden_size, embedding, num_layers=1, batch_size=1, use_embedding=False,
                  train_embedding=True):
         super(EncoderRNN, self).__init__()
