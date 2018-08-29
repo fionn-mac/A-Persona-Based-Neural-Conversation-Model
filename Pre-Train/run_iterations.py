@@ -79,25 +79,25 @@ class Run_Iterations(object):
 
         # self.help_fn.show_plot(plot_losses)
 
-    def evaluate(in_seq, out_seq, input_lengths):
+    def evaluate(self, in_seq, out_seq, input_lengths):
         loss, output_words, attentions = self.model.train(in_seq, out_seq, input_lengths,
-                                                    self.criterion, evaluate=True)
+                                                          self.criterion, evaluate=True)
         return loss, output_words, attentions
 
-    def evaluate_specific(in_seq, out_seq, in_len, name='tracking_pair'):
+    def evaluate_specific(self, in_seq, out_seq, in_len, name='tracking_pair'):
         dialogue = [self.index2word[j] for j in in_seq]
         response = [self.index2word[j] for j in out_seq]
         print('>', dialogue)
         print('=', response)
 
-        _, output_words, attentions = evaluate([in_seq], [out_seq], [in_len])
+        _, output_words, attentions = self.evaluate([in_seq], [out_seq], [in_len])
         output_sentence = ' '.join(output_words)
         print('<', output_sentence)
 
         print('BLEU Score', bleu_score.corpus_bleu([output_sentence], [response]))
         self.help_fn.show_attention(dialogue, output_words, attentions, name=name)
 
-    def evaluate_randomly(n=10):
+    def evaluate_randomly(self, n=10):
         for i in range(n):
             ind = random.randrange(self.dev_samples)
-            evaluate_specific(train_network, self.dev_in_seq[ind], self.dev_out_seq[ind], name=str(i))
+            self.evaluate_specific(train_network, self.dev_in_seq[ind], self.dev_out_seq[ind], name=str(i))
