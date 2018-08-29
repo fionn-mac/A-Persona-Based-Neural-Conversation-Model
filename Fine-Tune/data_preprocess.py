@@ -92,28 +92,24 @@ class Data_Preprocess(object):
         for i, tup in enumerate(xysa_train):
             self.x_train[i] = torch.LongTensor(tup[0])
             self.y_train[i] = torch.LongTensor(tup[1])
-            self.speaker_list_train[i] = torch.LongTensor(tup[2])
-            self.addressee_list_train[i] = torch.LongTensor(tup[3])
+            self.speaker_list_train[i] = tup[2]
+            self.addressee_list_train[i] = tup[3]
 
             if self.use_cuda:
                 self.x_train[i] = self.x_train[i].cuda()
                 self.y_train[i] = self.y_train[i].cuda()
-                self.speaker_list_train[i] = self.speaker_list_train[i].cuda()
-                self.addressee_list_train[i] = self.addressee_list_train[i].cuda()
 
             self.lengths_train.append(len(self.x_train[i]))
 
         for i, tup in enumerate(xysa_val):
             self.x_val[i] = torch.LongTensor(tup[0])
             self.y_val[i] = torch.LongTensor(tup[1])
-            self.speaker_list_val[i] = torch.LongTensor(tup[2])
-            self.addressee_list_val[i] = torch.LongTensor(tup[3])
+            self.speaker_list_val[i] = tup[2]
+            self.addressee_list_val[i] = tup[3]
 
             if self.use_cuda:
                 self.x_val[i] = self.x_val[i].cuda()
                 self.y_val[i] = self.y_val[i].cuda()
-                self.speaker_list_val[i] = self.speaker_list_val[i].cuda()
-                self.addressee_list_val[i] = self.addressee_list_val[i].cuda()
 
             self.lengths_val.append(len(self.x_val[i]))
 
@@ -146,7 +142,11 @@ class Data_Preprocess(object):
 
         self.speaker_list_train = torch.LongTensor(self.speaker_list_train)
         self.addressee_list_train = torch.LongTensor(self.addressee_list_train)
+        self.speaker_list_val = torch.LongTensor(self.speaker_list_val)
+        self.addressee_list_val = torch.LongTensor(self.addressee_list_val)
 
         if self.use_cuda:
             self.speaker_list_train = self.speaker_list_train.cuda()
             self.addressee_list_train = self.addressee_list_train.cuda()
+            self.speaker_list_val = self.speaker_list_val.cuda()
+            self.addressee_list_val = self.addressee_list_val.cuda()

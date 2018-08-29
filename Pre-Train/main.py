@@ -42,6 +42,7 @@ if __name__ == "__main__":
     print('Batch Size                 :', batch_size)
     print('Number of Layers           :', num_layers)
     print('Max. input length          :', max_length)
+    print('Learning rate                :', learning_rate)
     print('--------------------------------------\n')
 
     print('Reading input data.')

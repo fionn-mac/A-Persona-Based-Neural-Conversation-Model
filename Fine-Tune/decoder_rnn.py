@@ -42,6 +42,7 @@ class Decoder_RNN(nn.Module):
         batch_size = input.size()[1]
         embedded = self.embedding(input) # (1, B, V)
         persona = self.personas(speakers) # (1, B, V')
+
         features = torch.cat((embedded, persona), 2)
 
         max_length = encoder_outputs.size(0)

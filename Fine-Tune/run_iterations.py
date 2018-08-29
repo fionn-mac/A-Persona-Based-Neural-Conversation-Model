@@ -28,7 +28,11 @@ class Run_Iterations(object):
         self.plot_every = plot_every
 
         self.index2word = index2word
-        ''' Lists that will contain data in the form of tensors. '''
+        '''
+        in_seq and out_seq = list of tensors
+        input_lengths = list
+        speakers, addressees = tensors
+        '''
         # Training data.
         self.train_in_seq = train_in_seq
         self.train_out_seq = train_out_seq
@@ -66,7 +70,7 @@ class Run_Iterations(object):
                 input_variables = self.train_in_seq[i : i + self.batch_size] # Batch Size x Sequence Length
                 target_variables = self.train_out_seq[i : i + self.batch_size]
                 lengths = self.train_input_lengths[i : i + self.batch_size]
-                addressees = self.train_addressees[i : i + batch_size]
+                addressees = self.train_addressees[i : i + self.batch_size].view(1, -1) # 1 x Batch Size
 
                 loss = self.model.train(input_variables, target_variables, lengths, addressees,
                                         self.criterion, encoder_optimizer, decoder_optimizer)
@@ -98,6 +102,14 @@ class Run_Iterations(object):
         print('=', response, 'By :', person[1])
 
         _, output_words, attentions = self.evaluate([in_seq], [out_seq], [in_len], [person[0]])
+        try:
+            target_index = output_words[0].index('<EOS>') + 1
+        except ValueError:
+            target_index = len(output_words[0])
+
+        output_words = output_words[0][:target_index]
+        attentions = attentions[0, :target_index, :].view(target_index, -1)
+
         output_sentence = ' '.join(output_words)
         print('<', output_sentence)
 
@@ -107,5 +119,5 @@ class Run_Iterations(object):
     def evaluate_randomly(self, n=10):
         for i in range(n):
             ind = random.randrange(self.dev_samples)
-            self.evaluate_specific(train_network, self.dev_in_seq[ind], self.dev_out_seq[ind],
+            self.evaluate_specific(self.dev_in_seq[ind], self.dev_out_seq[ind], len(self.dev_in_seq[ind]),
                                    [self.dev_speakers[ind], self.dev_addressees[ind]], name=str(i))

@@ -91,6 +91,14 @@ class Run_Iterations(object):
         print('=', response)
 
         _, output_words, attentions = self.evaluate([in_seq], [out_seq], [in_len])
+        try:
+            target_index = output_words[0].index('<EOS>') + 1
+        except ValueError:
+            target_index = len(output_words[0])
+
+        output_words = output_words[0][:target_index]
+        attentions = attentions[0, :target_index, :].view(target_index, -1)
+
         output_sentence = ' '.join(output_words)
         print('<', output_sentence)
 
@@ -100,4 +108,5 @@ class Run_Iterations(object):
     def evaluate_randomly(self, n=10):
         for i in range(n):
             ind = random.randrange(self.dev_samples)
-            self.evaluate_specific(train_network, self.dev_in_seq[ind], self.dev_out_seq[ind], name=str(i))
+            self.evaluate_specific(self.dev_in_seq[ind], self.dev_out_seq[ind],
+                                   len(self.dev_in_seq[ind]), name=str(i))

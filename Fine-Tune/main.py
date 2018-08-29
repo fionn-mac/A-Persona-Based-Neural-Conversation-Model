@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     parser.add_argument("-l", "--max_length", type=int, help="Maximum Sentence Length.", default=20)
     parser.add_argument("-tp", "--tracking_pair", type=bool, help="Track change in outputs over a randomly chosen sample.", default=False)
-    parser.add_argument("-d", "--dataset", type=str, help="Dataset directory.", default='../Datasets/OpenSubtitles/')
+    parser.add_argument("-d", "--dataset", type=str, help="Dataset directory.", default='../Datasets/Friends/')
     parser.add_argument("-e", "--embedding_file", type=str, help="File containing word embeddings.", default='../../Embeddings/GoogleNews/GoogleNews-vectors-negative300.bin.gz')
 
     args = parser.parse_args()
@@ -41,9 +41,11 @@ if __name__ == "__main__":
 
     print('Model Parameters:')
     print('Hidden Size                  :', hidden_size)
+    print('Persona Size                 :', persona_size)
     print('Batch Size                   :', batch_size)
     print('Number of Layers             :', num_layers)
     print('Max. input length            :', max_length)
+    print('Learning rate                :', learning_rate)
     print('--------------------------------------\n')
 
     print('Reading input data.')
@@ -58,8 +60,8 @@ if __name__ == "__main__":
     dev_in_seq = data_preprocess.x_val
     dev_out_seq = data_preprocess.y_val
     dev_lengths = data_preprocess.lengths_val
-    dev_speakers = data_preprocess.speaker_list_dev
-    dev_addressees = data_preprocess.addressee_list_dev
+    dev_speakers = data_preprocess.speaker_list_val
+    dev_addressees = data_preprocess.addressee_list_val
 
     word2index = data_preprocess.word2index
     index2word = data_preprocess.index2word

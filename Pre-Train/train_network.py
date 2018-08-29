@@ -14,12 +14,13 @@ class Train_Network(object):
         self.teacher_forcing_ratio = teacher_forcing_ratio
 
     def train(self, input_variables, target_variables, lengths, criterion,
-              encoder_optimizer, decoder_optimizer, evaluate=False):
+              encoder_optimizer=None, decoder_optimizer=None, evaluate=False):
 
         ''' Pad all tensors in this batch to same length. '''
         input_variables = torch.nn.utils.rnn.pad_sequence(input_variables)
         target_variables = torch.nn.utils.rnn.pad_sequence(target_variables)
 
+        input_length = input_variables.size()[0]
         target_length = target_variables.size()[0]
         batch_size = target_variables.size()[1]
 
@@ -38,26 +39,23 @@ class Train_Network(object):
         decoder_hidden = encoder_hidden[:self.num_layers].view(self.num_layers, batch_size, -1)
 
         if evaluate:
-            decoded_words = []
-            decoder_attentions = torch.zeros(self.max_length, input_length)
+            decoded_words = [[] for i in range(batch_size)]
+            decoder_attentions = torch.zeros(batch_size, target_length, input_length)
 
             for di in range(target_length):
-                decoder_output, decoder_hidden, decoder_attention = self.decoder(decoder_input, decoder_hidden, encoder_outputs)
+                decoder_outputs, decoder_hidden, decoder_attention = self.decoder(decoder_inputs, decoder_hidden, encoder_outputs)
                 loss += criterion(decoder_outputs, target_variables[di])
 
-                decoder_attentions[di] = decoder_attention.data
-                topv, topi = decoder_output.data.topk(1)
-                ni = topi[0][0]
-                if ni == self.EOS_token:
-                    decoded_words.append('<EOS>')
-                    break
-                else:
-                    decoded_words.append(self.index2word[int(ni)])
+                decoder_attentions[:, di, :] = decoder_attention.data
+                topv, topi = decoder_outputs.data.topk(1)
 
-                decoder_input = torch.LongTensor([[ni]])
-                if self.use_cuda: decoder_input = decoder_input.cuda()
+                for i, ind in enumerate(topi[0]):
+                    decoded_words[i].append(self.index2word[ind])
 
-            return loss.item() / target_length, decoded_words, decoder_attentions[:di + 1]
+                decoder_inputs = topi.permute(1, 0)
+                if self.use_cuda: decoder_inputs = decoder_inputs.cuda()
+
+            return loss.item() / target_length, decoded_words, decoder_attentions
 
         else:
             use_teacher_forcing = True if random.random() < self.teacher_forcing_ratio else False
