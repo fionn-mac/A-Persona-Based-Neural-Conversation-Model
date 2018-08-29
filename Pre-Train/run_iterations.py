@@ -77,6 +77,11 @@ class Run_Iterations(object):
                 plot_losses.append(plot_loss_avg)
                 plot_loss_total = 0
 
+        if epoch % 5 == 0:
+            self.learning_rate /= 2
+            encoder_optimizer = optim.RMSprop(encoder_trainable_parameters, lr=self.learning_rate)
+            decoder_optimizer = optim.RMSprop(decoder_trainable_parameters, lr=self.learning_rate)
+
         # self.help_fn.show_plot(plot_losses)
 
     def evaluate(self, in_seq, out_seq, input_lengths):

@@ -14,7 +14,7 @@ use_cuda = torch.cuda.is_available()
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-n", "--num_iters", type=int, help="Number of iterations over the training set.", default=10)
+    parser.add_argument("-n", "--num_iters", type=int, help="Number of iterations over the training set.", default=7)
     parser.add_argument("-nl", "--num_layers", type=int, help="Number of layers in Encoder and Decoder", default=3)
     parser.add_argument("-z", "--hidden_size", type=int, help="GRU Hidden State Size", default=1024)
     parser.add_argument("-p", "--persona_size", type=int, help="Persona Embedding Size", default=100)
@@ -95,5 +95,6 @@ if __name__ == "__main__":
                                     train_addressees, index2word, batch_size, num_iters, learning_rate,
                                     tracking_pair=tracking_pair, dev_in_seq=dev_in_seq, dev_out_seq=dev_out_seq,
                                     dev_input_lengths=dev_lengths, dev_speakers=dev_speakers, dev_addressees=dev_addressees)
+
     run_iterations.train_iters()
     run_iterations.evaluate_randomly()

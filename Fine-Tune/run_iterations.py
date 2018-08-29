@@ -88,6 +88,11 @@ class Run_Iterations(object):
                 plot_losses.append(plot_loss_avg)
                 plot_loss_total = 0
 
+        if epoch % 3 == 0:
+            self.learning_rate /= 2
+            encoder_optimizer = optim.RMSprop(encoder_trainable_parameters, lr=self.learning_rate)
+            decoder_optimizer = optim.RMSprop(decoder_trainable_parameters, lr=self.learning_rate)
+
         # self.help_fn.show_plot(plot_losses)
 
     def evaluate(self, in_seq, out_seq, input_lengths, people):
@@ -98,10 +103,10 @@ class Run_Iterations(object):
     def evaluate_specific(self, in_seq, out_seq, in_len, person, name='tracking_pair'):
         dialogue = [self.index2word[j] for j in in_seq]
         response = [self.index2word[j] for j in out_seq]
-        print('>', dialogue, 'By :', person[0])
-        print('=', response, 'By :', person[1])
+        print('>', dialogue, 'By :', person[0].data)
+        print('=', response, 'By :', person[1].data)
 
-        _, output_words, attentions = self.evaluate([in_seq], [out_seq], [in_len], [person[0]])
+        _, output_words, attentions = self.evaluate([in_seq], [out_seq], [in_len], person[0].view(1, 1))
         try:
             target_index = output_words[0].index('<EOS>') + 1
         except ValueError:
@@ -120,4 +125,4 @@ class Run_Iterations(object):
         for i in range(n):
             ind = random.randrange(self.dev_samples)
             self.evaluate_specific(self.dev_in_seq[ind], self.dev_out_seq[ind], len(self.dev_in_seq[ind]),
-                                   [self.dev_speakers[ind], self.dev_addressees[ind]], name=str(i))
+                                   [self.dev_speakers[ind:ind+1], self.dev_addressees[ind:ind+1]], name=str(i))
