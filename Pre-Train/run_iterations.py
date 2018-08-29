@@ -69,8 +69,8 @@ class Run_Iterations(object):
             if epoch % self.print_every == 0:
                 print_loss_avg = print_loss_total / self.print_every
                 print_loss_total = 0
-                print('%s (%d %d%%) %.4f' %  self.help_fn.time_slice(start, epoch / self.num_iters),
-                                             epoch, epoch / self.num_iters * 100, print_loss_avg)
+                print('%s (%d %d%%) %.4f' % (self.help_fn.time_slice(start, epoch / self.num_iters),
+                                             epoch, epoch / self.num_iters * 100, print_loss_avg))
 
             if epoch % self.plot_every == 0:
                 plot_loss_avg = plot_loss_total / self.plot_every
