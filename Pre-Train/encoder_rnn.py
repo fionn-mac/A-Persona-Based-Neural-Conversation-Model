@@ -7,7 +7,7 @@ import torch.nn.functional as F
 class Encoder_RNN(nn.Module):
     def __init__(self, hidden_size, embedding, num_layers=1, batch_size=1, use_embedding=False,
                  train_embedding=True):
-        super(EncoderRNN, self).__init__()
+        super(Encoder_RNN, self).__init__()
         self.use_cuda = torch.cuda.is_available()
         self.hidden_size = hidden_size
         self.batch_size = batch_size
@@ -33,15 +33,11 @@ class Encoder_RNN(nn.Module):
         hidden          -> (Num. Layers * Num. Directions x Batch Size x Hidden Size)
         '''
         embedded = self.embedding(input) # L, B, V
-
-        # packed:
-        #       - data: (sum(batch_sizes), word_vec_size)
-        #       - batch_sizes: list of batch sizes
         packed = torch.nn.utils.rnn.pack_padded_sequence(embedded, input_lengths)
-        # outputs: (max_src_len, batch_size, hidden_size * num_directions)
+
         outputs, hidden = self.gru(packed, hidden)
-        # output_lens == input_lengths
         outputs, output_lengths = torch.nn.utils.rnn.pad_packed_sequence(outputs)
+
         # Concatenate Bidirectional Outputs
         outputs = outputs[:, :, :self.hidden_size] + outputs[:, :, self.hidden_size:]
         return outputs, hidden

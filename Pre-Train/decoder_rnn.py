@@ -8,7 +8,7 @@ from attention import Attention
 class Decoder_RNN(nn.Module):
     def __init__(self, hidden_size, embedding, num_layers=1, use_embedding=False,
                  train_embedding=True, dropout_p=0.1):
-        super(DecoderRNN, self).__init__()
+        super(Decoder_RNN, self).__init__()
         self.use_cuda = torch.cuda.is_available()
         self.hidden_size = hidden_size
         self.dropout_p = dropout_p
@@ -31,12 +31,11 @@ class Decoder_RNN(nn.Module):
         self.gru = nn.GRU(self.hidden_size + self.input_size, self.hidden_size, self.num_layers)
         self.out = nn.Linear(self.hidden_size, self.output_size)
 
-    def forward(self, input, speakers, hidden, encoder_outputs, input_lengths):
+    def forward(self, input, hidden, encoder_outputs):
         '''
         input           -> (1 x Batch Size)
         hidden          -> (Num. Layers * Num. Directions x Batch Size x Hidden Size)
         encoder_outputs -> (Max Sentence Length, Batch Size, Hidden Size)
-        input_lengths   -> (Batch Size (Sorted in decreasing order of lengths))
         '''
         batch_size = input.size()[1]
         features = self.embedding(input) # (1, B, V)

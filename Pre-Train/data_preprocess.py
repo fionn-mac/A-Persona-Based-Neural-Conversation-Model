@@ -8,8 +8,6 @@ import torch
 import numpy as np
 import pandas as pd
 
-from nltk import word_tokenize
-
 class Data_Preprocess(object):
     def __init__(self, path, max_length=10):
         self.path = path
@@ -42,8 +40,8 @@ class Data_Preprocess(object):
 
     def load_dialogues(self):
         # Load training and test set
-        train_df = pd.read_csv(path.join(self.path, 'osdb_train.txt'), sep='|')
-        val_df = pd.read_csv(path.join(self.path, 'osdb_dev.txt'), sep='|')
+        train_df = pd.read_csv(path.join(self.path, 'osdb_train_mini.txt'), sep='|')
+        val_df = pd.read_csv(path.join(self.path, 'osdb_dev_mini.txt'), sep='|')
 
         lengths = []
 
@@ -53,7 +51,7 @@ class Data_Preprocess(object):
                 # Iterate through the text of both the dialogues of the row
                 for dialogue in self.dialogue_cols:
                     d2n = []  # Dialogue Numbers Representation
-                    for i, word_id in enumerate(word_tokenize(row[dialogue])):
+                    for i, word_id in enumerate(row[dialogue].split()):
                         ''' No concept of Person ID during Pre-Training '''
                         ''' Considering only first |max_length-1| words, with final word being EOS token '''
 
@@ -68,7 +66,7 @@ class Data_Preprocess(object):
 
                     # Replace |questions as word| to |question as number| representation
                     # Add <EOS> token at end of dialogue.
-                    dataset.set_value(index, dialogue, d2n + [self.EOS_token])
+                    dataset.at[index, dialogue] = d2n + [self.EOS_token]
 
         return train_df, val_df
 
@@ -77,13 +75,21 @@ class Data_Preprocess(object):
         xy_val = sorted(zip(self.x_val, self.y_val), key=lambda tup: len(tup[0]), reverse=True)
 
         for i, tup in enumerate(xy_train):
-            self.x_train[i] = tup[0]
-            self.y_train[i] = tup[1]
+            self.x_train[i] = torch.LongTensor(tup[0])
+            self.y_train[i] = torch.LongTensor(tup[1])
+            if self.use_cuda:
+                self.x_train[i] = self.x_train[i].cuda()
+                self.y_train[i] = self.y_train[i].cuda()
+
             self.lengths_train.append(len(self.x_train[i]))
 
         for i, tup in enumerate(xy_val):
-            self.x_val[i] = tup[0]
-            self.y_val[i] = tup[1]
+            self.x_val[i] = torch.LongTensor(tup[0])
+            self.y_val[i] = torch.LongTensor(tup[1])
+            if self.use_cuda:
+                self.x_val[i] = self.x_val[i].cuda()
+                self.y_val[i] = self.y_val[i].cuda()
+
             self.lengths_val.append(len(self.x_val[i]))
 
     def run(self):

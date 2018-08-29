@@ -69,21 +69,24 @@ def parse_xml(walk_dir):
 if __name__ == "__main__":
     parse_xml(os.path.join(data_dir, 'Files'))
 
-data_size = len(data_set)
-print('Total number of training samples :', data_size)
+    train_file.write('dialogue1|dialogue2\n')
+    dev_file.write('dialogue1|dialogue2\n')
 
-print('Writing Dialogues')
-# Taking an 80% split for training
-train_size = int(data_size*0.8)
-random.shuffle(data_set)
+    data_size = len(data_set)
+    print('Total number of training samples :', data_size)
 
-for i, convo in enumerate(data_set):
-    if i < train_size:
-        train_file.write(convo + '\n')
-    else:
-        dev_file.write(convo + '\n')
+    print('Writing Dialogues')
+    # Taking an 80% split for training
+    train_size = int(data_size*0.8)
+    random.shuffle(data_set)
 
-print('Writing Vocabulary')
+    for i, convo in enumerate(data_set):
+        if i < train_size:
+            train_file.write(convo + '\n')
+        else:
+            dev_file.write(convo + '\n')
 
-for word in vocab:
-    vocab_file.write(word + '\n')
+    print('Writing Vocabulary')
+
+    for word in vocab:
+        vocab_file.write(word + '\n')

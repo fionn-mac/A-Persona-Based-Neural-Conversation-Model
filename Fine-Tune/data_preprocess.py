@@ -7,8 +7,6 @@ import torch
 import numpy as np
 import pandas as pd
 
-from nltk import word_tokenize
-
 class Data_Preprocess(object):
     def __init__(self, path, max_length=10):
         self.path = path
@@ -63,7 +61,7 @@ class Data_Preprocess(object):
                 # Iterate through the text of both the dialogues of the row
                 for dialogue, person in zip(self.dialogue_cols, data_type):
                     d2n = []  # Dialogue Numbers Representation
-                    for i, word_id in enumerate(row[dialogue].split(' ')):
+                    for i, word_id in enumerate(row[dialogue].split()):
                         ''' First number is person ID '''
                         if i == 0:
                             person.append(int(word_id))
@@ -81,7 +79,7 @@ class Data_Preprocess(object):
 
                     # Replace |questions as word| to |question as number| representation
                     # Add <EOS> token at end of dialogue.
-                    dataset.set_value(index, dialogue, d2n + [self.EOS_token])
+                    dataset.at[index, dialogue] = d2n + [self.EOS_token]
 
         return train_df, train[0], train[1], val_df, val[0], val[1]
 
@@ -92,17 +90,31 @@ class Data_Preprocess(object):
                           key=lambda tup: len(tup[0]), reverse=True)
 
         for i, tup in enumerate(xysa_train):
-            self.x_train[i] = tup[0]
-            self.y_train[i] = tup[1]
-            self.speaker_list_train[i] = tup[2]
-            self.addressee_list_train[i] = tup[3]
+            self.x_train[i] = torch.LongTensor(tup[0])
+            self.y_train[i] = torch.LongTensor(tup[1])
+            self.speaker_list_train[i] = torch.LongTensor(tup[2])
+            self.addressee_list_train[i] = torch.LongTensor(tup[3])
+
+            if self.use_cuda:
+                self.x_train[i] = self.x_train[i].cuda()
+                self.y_train[i] = self.y_train[i].cuda()
+                self.speaker_list_train[i] = self.speaker_list_train[i].cuda()
+                self.addressee_list_train[i] = self.addressee_list_train[i].cuda()
+
             self.lengths_train.append(len(self.x_train[i]))
 
         for i, tup in enumerate(xysa_val):
-            self.x_val[i] = tup[0]
-            self.y_val[i] = tup[1]
-            self.speaker_list_val[i] = tup[2]
-            self.addressee_list_val[i] = tup[3]
+            self.x_val[i] = torch.LongTensor(tup[0])
+            self.y_val[i] = torch.LongTensor(tup[1])
+            self.speaker_list_val[i] = torch.LongTensor(tup[2])
+            self.addressee_list_val[i] = torch.LongTensor(tup[3])
+
+            if self.use_cuda:
+                self.x_val[i] = self.x_val[i].cuda()
+                self.y_val[i] = self.y_val[i].cuda()
+                self.speaker_list_val[i] = self.speaker_list_val[i].cuda()
+                self.addressee_list_val[i] = self.addressee_list_val[i].cuda()
+
             self.lengths_val.append(len(self.x_val[i]))
 
     def get_people(self):
