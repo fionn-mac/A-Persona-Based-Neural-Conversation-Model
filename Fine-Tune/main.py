@@ -11,6 +11,18 @@ from run_iterations import Run_Iterations
 
 use_cuda = torch.cuda.is_available()
 
+def load_weights(model, state_dict):
+    own_state = model.state_dict()
+    for name, param in state_dict.items():
+        if name not in own_state or own_state[name].size() != param.size():
+             continue
+
+        # Backwards compatibility for serialized parameters.
+        if isinstance(param, torch.nn.Parameter):
+            param = param.data
+
+        own_state[name].copy_(param)
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
@@ -86,6 +98,9 @@ if __name__ == "__main__":
     if use_cuda:
         encoder = encoder.cuda()
         decoder = decoder.cuda()
+
+    load_weights(encoder, torch.load('../Pre-Train/encoder.pt'))
+    load_weights(decoder, torch.load('../Pre-Train/decoder.pt'))
 
     print("Training Network.")
 

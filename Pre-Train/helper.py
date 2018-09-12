@@ -4,6 +4,8 @@ import math
 import torch
 from torch.autograd import Variable
 
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 

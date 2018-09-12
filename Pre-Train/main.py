@@ -87,3 +87,6 @@ if __name__ == "__main__":
                                     dev_in_seq=dev_in_seq, dev_out_seq=dev_out_seq, dev_input_lengths=dev_lengths)
     run_iterations.train_iters()
     run_iterations.evaluate_randomly()
+
+    torch.save(encoder.state_dict(), './encoder.pt')
+    torch.save(decoder.state_dict(), './decoder.pt')
