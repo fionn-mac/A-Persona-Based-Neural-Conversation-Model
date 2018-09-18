@@ -14,7 +14,7 @@ use_cuda = torch.cuda.is_available()
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-n", "--num_iters", type=int, help="Number of iterations over the training set.", default=15)
+    parser.add_argument("-n", "--num_iters", type=int, help="Number of iterations over the training set.", default=7)
     parser.add_argument("-nl", "--num_layers", type=int, help="Number of layers in Encoder and Decoder", default=3)
     parser.add_argument("-z", "--hidden_size", type=int, help="GRU Hidden State Size", default=1024)
     parser.add_argument("-b", "--batch_size", type=int, help="Batch Size", default=32)

@@ -40,8 +40,8 @@ class Data_Preprocess(object):
 
     def load_dialogues(self):
         # Load training and test set
-        train_df = pd.read_csv(path.join(self.path, 'osdb_train_mini.txt'), sep='|')
-        val_df = pd.read_csv(path.join(self.path, 'osdb_dev_mini.txt'), sep='|')
+        train_df = pd.read_csv(path.join(self.path, 'osdb_train_medium.txt'), sep='|')
+        val_df = pd.read_csv(path.join(self.path, 'osdb_dev_medium.txt'), sep='|')
 
         lengths = []
 

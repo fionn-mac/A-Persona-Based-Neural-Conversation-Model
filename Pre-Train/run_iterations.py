@@ -66,6 +66,10 @@ class Run_Iterations(object):
                 print_loss_total += loss
                 plot_loss_total += loss
 
+                now = time.time()
+                # print('Completed %.4f Percent of Epoch %d in %s Minutes' % ((i + self.batch_size)/ self.train_samples * 100,
+                #                                                             epoch, self.help_fn.as_minutes(now - start)))
+
             if epoch % self.print_every == 0:
                 print_loss_avg = print_loss_total / self.print_every
                 print_loss_total = 0
@@ -76,11 +80,6 @@ class Run_Iterations(object):
                 plot_loss_avg = plot_loss_total / self.plot_every
                 plot_losses.append(plot_loss_avg)
                 plot_loss_total = 0
-
-        if epoch % 5 == 0:
-            self.learning_rate /= 2
-            encoder_optimizer = optim.RMSprop(encoder_trainable_parameters, lr=self.learning_rate)
-            decoder_optimizer = optim.RMSprop(decoder_trainable_parameters, lr=self.learning_rate)
 
         # self.help_fn.show_plot(plot_losses)
 
