@@ -53,10 +53,3 @@ class Decoder_RNN(nn.Module):
 
         output = F.log_softmax(self.out(output), dim=1)
         return output, hidden, attn_weights
-
-    def initHidden(self, batch_size):
-        result = torch.zeros(self.num_layers, batch_size, self.hidden_size)
-        if self.use_cuda:
-            return result.cuda()
-        else:
-            return result

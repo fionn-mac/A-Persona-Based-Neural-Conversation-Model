@@ -42,7 +42,7 @@ class Encoder_RNN(nn.Module):
         outputs = outputs[:, :, :self.hidden_size] + outputs[:, :, self.hidden_size:]
         return outputs, hidden
 
-    def initHidden(self, batch_size=0):
+    def init_hidden(self, batch_size=0):
         if batch_size == 0: batch_size = self.batch_size
         result = torch.zeros(2 * self.num_layers, batch_size, self.hidden_size)
         if self.use_cuda:

@@ -29,7 +29,7 @@ class Train_Network(object):
         if decoder_optimizer: decoder_optimizer.zero_grad()
         loss = 0
 
-        encoder_hidden = self.encoder.initHidden(batch_size)
+        encoder_hidden = self.encoder.init_hidden(batch_size)
         encoder_outputs, encoder_hidden = self.encoder(input_variables, lengths, encoder_hidden)
 
         decoder_inputs = torch.LongTensor([[self.SOS_token]*batch_size])
