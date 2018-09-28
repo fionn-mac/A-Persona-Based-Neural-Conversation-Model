@@ -1,9 +1,8 @@
 __pycache__
 Datasets/Neural-Dialogue-Generation/
 Datasets/OpenSubtitles/Files/
-Datasets/OpenSubtitles/osdb_*
-Datasets/OpenSubtitles/subtitles.txt
-Datasets/OpenSubtitles/vocabulary.txt
+Datasets/OpenSubtitles/*.txt
+Datasets/Wikitext/
 Model\ Weights/
 Results/
 Pre_Train/Not\ Working

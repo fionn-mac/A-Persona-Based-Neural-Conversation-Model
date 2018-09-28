@@ -31,7 +31,7 @@ class Data_Preprocess(object):
         self.run()
 
     def load_vocabulary(self):
-        with open(self.path + 'vocabulary.txt', encoding='utf-8') as f:
+        with open(path.join(self.path, 'vocabulary.txt'), encoding='utf-8') as f:
             for word in f:
                 word = word.strip('\n')
                 self.vocab.add(word)
@@ -41,8 +41,8 @@ class Data_Preprocess(object):
 
     def load_dialogues(self):
         # Load training and test set
-        train_df = pd.read_csv(path.join(self.path, 'osdb_train_medium.txt'), sep='|')
-        val_df = pd.read_csv(path.join(self.path, 'osdb_dev_medium.txt'), sep='|')
+        train_df = pd.read_csv(path.join(self.path, 'train.txt'), sep='|')
+        val_df = pd.read_csv(path.join(self.path, 'val.txt'), sep='|')
 
         lengths = []
 

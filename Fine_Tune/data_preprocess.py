@@ -20,8 +20,8 @@ class Data_Preprocess(Base_Class):
 
     def load_dialogues(self):
         # Load training and test set
-        train_df = pd.read_csv(self.path + 'friends_train.txt', sep='|')
-        val_df = pd.read_csv(self.path + 'friends_dev.txt', sep='|')
+        train_df = pd.read_csv(self.path + 'train.txt', sep='|')
+        val_df = pd.read_csv(self.path + 'val.txt', sep='|')
 
         '''
         train contains the speakers and addressees of training split.
