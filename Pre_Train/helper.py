@@ -25,6 +25,18 @@ class Helper(object):
         rs = es - s
         return '%s (- %s)' % (self.as_minutes(s), self.as_minutes(rs))
 
+    def to_cuda(self, tensors):
+        for i, tensor in enumerate(tensors):
+            tensors[i] = tensor.cuda()
+
+        return tensors
+
+    def to_cpu(self, tensors):
+        for i, tensor in enumerate(tensors):
+            tensors[i] = tensor.cpu()
+
+        return tensors
+
     def show_plot(self, points):
         plt.figure()
         fig, ax = plt.subplots()

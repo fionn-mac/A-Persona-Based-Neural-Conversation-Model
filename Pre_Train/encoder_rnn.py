@@ -1,12 +1,9 @@
 import torch
 import torch.nn as nn
 from torch import Tensor
-from torch import optim
-import torch.nn.functional as F
 
 class Encoder_RNN(nn.Module):
-    def __init__(self, hidden_size, embedding, num_layers=1, batch_size=1, use_embedding=False,
-                 train_embedding=True):
+    def __init__(self, hidden_size, embedding, num_layers=1, batch_size=1, use_embedding=False, train_embedding=True):
         super(Encoder_RNN, self).__init__()
         self.use_cuda = torch.cuda.is_available()
         self.hidden_size = hidden_size
@@ -33,8 +30,8 @@ class Encoder_RNN(nn.Module):
         hidden          -> (Num. Layers * Num. Directions x Batch Size x Hidden Size)
         '''
         embedded = self.embedding(input) # L, B, V
-        packed = torch.nn.utils.rnn.pack_padded_sequence(embedded, input_lengths)
 
+        packed = torch.nn.utils.rnn.pack_padded_sequence(embedded, input_lengths)
         outputs, hidden = self.gru(packed, hidden)
         outputs, output_lengths = torch.nn.utils.rnn.pad_packed_sequence(outputs)
 

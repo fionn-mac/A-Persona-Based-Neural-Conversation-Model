@@ -13,11 +13,6 @@ class Attention(nn.Module):
         self.v = nn.Parameter(torch.rand(hidden_size))
         stdv = 1. / math.sqrt(self.v.size(0))
         self.v.data.normal_(mean=0, std=stdv)
-        self.mask = None
-
-    def set_mask(self, mask):
-        ''' Sets indices to be masked '''
-        self.mask = mask
 
     def forward(self, hidden, encoder_outputs):
         '''
@@ -37,6 +32,4 @@ class Attention(nn.Module):
         energy = energy.transpose(2, 1) # [B, H, L]
         v = self.v.repeat(encoder_outputs.data.shape[0], 1).unsqueeze(1) #[B, 1, H]
         energy = torch.bmm(v, energy).squeeze(1) # [B, L]
-        if self.mask is not None:
-            energy.data.masked_fill_(self.mask, -float('inf'))
         return energy
