@@ -8,8 +8,8 @@ import torch
 import numpy as np
 
 class Data_Preprocess(object):
-    def __init__(self, path, min_length=5, max_length=20):
-        self.path = path
+    def __init__(self, dir_path, min_length=5, max_length=20):
+        self.dir_path = dir_path
         self.PAD_token = 0
         self.SOS_token = 1
         self.EOS_token = 2
@@ -28,7 +28,7 @@ class Data_Preprocess(object):
         self.run()
 
     def load_vocabulary(self):
-        with open(path.join(self.path, 'vocabulary.txt'), encoding='utf-8') as f:
+        with open(path.join(self.dir_path, 'vocabulary.txt'), encoding='utf-8') as f:
             for word in f:
                 word = word.strip('\n')
                 self.vocab.add(word)
@@ -38,8 +38,8 @@ class Data_Preprocess(object):
 
     def load_dialogues(self):
         # Load training and test set
-        train_path = path.join(self.path, 'train.txt')
-        val_path = path.join(self.path, 'val.txt')
+        train_path = path.join(self.dir_path, 'train.txt')
+        val_path = path.join(self.dir_path, 'val.txt')
 
         train_seq = [[], []]
         val_seq = [[], []]

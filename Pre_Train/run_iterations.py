@@ -92,8 +92,6 @@ class Run_Iterations(object):
             print('Starting Fold                 :', fold_number)
 
             for epoch in range(1, self.num_iters + 1):
-                has_reduced = False
-
                 for i in range(0, fold_size, self.batch_size):
                     input_variables = in_fold[i : i + self.batch_size] # Batch Size x Sequence Length
                     target_variables = out_fold[i : i + self.batch_size]
@@ -109,19 +107,12 @@ class Run_Iterations(object):
                         print('Completed %.4f Percent of Epoch %d in %s' % ((i + self.batch_size) / fold_size * 100,
                                                                             epoch, self.help_fn.as_minutes(now - start)))
 
-                    # if epoch >= 0 and not has_reduced and i >= fold_size / 2:
-                    #     learning_rate *= 0.90
-                    #     encoder_optimizer = optim.Adam(encoder_trainable_parameters, lr=learning_rate)
-                    #     decoder_optimizer = optim.Adam(decoder_trainable_parameters, lr=learning_rate)
-                    #     has_reduced = True
-
                 if epoch % 5 == 0:
-                    self.learning_rate *= 0.80
+                    self.learning_rate = max(self.learning_rate * 0.80, 0.001)
                     encoder_optimizer = optim.Adam(encoder_trainable_parameters, lr=self.learning_rate)
                     decoder_optimizer = optim.Adam(decoder_trainable_parameters, lr=self.learning_rate)
 
                 if self.tracking_pair: self.evaluate_specific(*self.tracking_pair)
-                # self.evaluate_randomly()
 
                 if epoch % self.print_every == 0:
                     print_loss_avg = print_loss_total / self.print_every
