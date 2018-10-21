@@ -7,7 +7,7 @@ from attention import Attention
 
 class Decoder_RNN(nn.Module):
     def __init__(self, hidden_size, embedding, num_layers=1, use_embedding=False,
-                 train_embedding=True, dropout_p=0.1):
+                 train_embedding=True, dropout_p=0.2):
         super(Decoder_RNN, self).__init__()
         self.use_cuda = torch.cuda.is_available()
         self.hidden_size = hidden_size
@@ -28,7 +28,7 @@ class Decoder_RNN(nn.Module):
         self.embedding.weight.requires_grad = train_embedding
 
         self.attn = Attention('concat', self.hidden_size)
-        self.gru = nn.GRU(self.hidden_size + self.input_size, self.hidden_size, self.num_layers)
+        self.gru = nn.GRU(self.hidden_size + self.input_size, self.hidden_size, self.num_layers, dropout=dropout_p)
         self.out = nn.Linear(self.hidden_size, self.output_size)
 
     def forward(self, input, hidden, encoder_outputs):
