@@ -20,8 +20,8 @@ class Data_Preprocess(Base_Class):
 
     def load_dialogues(self):
         # Load training and test set
-        train_path = path.join(self.path, 'train.txt')
-        val_path = path.join(self.path, 'val.txt')
+        train_path = path.join(self.dir_path, 'train.txt')
+        val_path = path.join(self.dir_path, 'val.txt')
 
         train_seq = [[], []]
         val_seq = [[], []]
