@@ -42,9 +42,6 @@ class Run_Iterations(Base_Class):
         encoder_trainable_parameters = list(filter(lambda p: p.requires_grad, self.model.encoder.parameters()))
         decoder_trainable_parameters = list(filter(lambda p: p.requires_grad, self.model.decoder.parameters()))
 
-        encoder_optimizer = optim.RMSprop(encoder_trainable_parameters, lr=self.learning_rate)
-        decoder_optimizer = optim.RMSprop(decoder_trainable_parameters, lr=self.learning_rate)
-
         if self.tracking_pair:
             ind = random.randint(0, self.train_samples)
             self.tracking_pair = [self.train_in_seq[ind], self.train_out_seq[ind], self.train_in_seq[ind].size()[0],
@@ -84,6 +81,11 @@ class Run_Iterations(Base_Class):
                      self.train_speakers, self.train_addressees)
 
         for in_fold, out_fold, fold_lengths, fold_speakers, fold_addressees in inputs:
+            # Initialze Optimizers
+            learning_rate = self.learning_rate
+            encoder_optimizer = optim.Adam(encoder_trainable_parameters, lr=learning_rate)
+            decoder_optimizer = optim.Adam(decoder_trainable_parameters, lr=learning_rate)
+
             # Convert fold contents to cuda
             if self.use_cuda:
                 in_fold = self.help_fn.to_cuda(in_fold)
@@ -127,6 +129,11 @@ class Run_Iterations(Base_Class):
                     plot_losses.append(plot_loss_avg)
                     plot_loss_total = 0
 
+                if epoch % 5 == 0:
+                    self.learning_rate = max(self.learning_rate * 0.80, 0.001)
+                    encoder_optimizer = optim.Adam(encoder_trainable_parameters, lr=self.learning_rate)
+                    decoder_optimizer = optim.Adam(decoder_trainable_parameters, lr=self.learning_rate)
+
             # Convert fold contents back to cpu
             if self.use_cuda:
                 in_fold = self.help_fn.to_cpu(in_fold)
@@ -134,6 +141,7 @@ class Run_Iterations(Base_Class):
                 fold_speakers = fold_speakers.cpu()
                 fold_addressees = fold_addressees.cpu()
 
+            fold_number += 1
             # self.help_fn.show_plot(plot_losses)
 
     def evaluate(self, in_seq, out_seq, lengths, people):
