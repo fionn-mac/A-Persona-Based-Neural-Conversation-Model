@@ -69,7 +69,7 @@ if __name__ == "__main__":
     encoder = Encoder_RNN(args.hidden_size, (len(data_p.word2index), 300), batch_size=args.batch_size,
                           num_layers=args.num_layers, use_embedding=False, train_embedding=True)
     decoder = Decoder_RNN(args.hidden_size, (len(data_p.word2index), 300), (personas, args.persona_size),
-                          num_layers=args.num_layers, use_embedding=False, train_embedding=True, dropout_p=0.1)
+                          num_layers=args.num_layers, use_embedding=False, train_embedding=True, dropout_p=args.dropout)
 
     if path.isfile('../Pre-Train/encoder.pt') and path.isfile('../Pre-Train/decoder.pt'):
         load_weights(encoder, torch.load('../Pre-Train/encoder.pt'))

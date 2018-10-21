@@ -37,6 +37,7 @@ class Data_Preprocess(Base_Class):
                 for line in lines:
                     line = line.split('|')
 
+                    ''' First number in each list corresponds to Person ID of speaker '''
                     input_1 = line[0].split()
                     speaker = input_1[0]
                     dialogue = input_1[1:]
@@ -52,7 +53,6 @@ class Data_Preprocess(Base_Class):
                        len_y <= self.min_length or len_y >= self.max_length:
                        continue
 
-                    ''' First number in each list corresponds to Person ID of speaker '''
                     datalist[0][0].append([self.SOS_token] + [int(word) + 2 for word in dialogue])
                     datalist[0][1].append([int(word) + 2 for word in response] + [self.EOS_token])
                     datalist[1].append(speaker)
