@@ -6,19 +6,18 @@ import re
 import torch
 
 import numpy as np
-import pandas as pd
 
 class Data_Preprocess(object):
     def __init__(self, path, min_length=5, max_length=20):
         self.path = path
         self.PAD_token = 0
+        self.SOS_token = 1
         self.EOS_token = 2
         self.min_length = min_length
         self.max_length = max_length
-        self.vocab = set("<EOS>")
+        self.vocab = set(["<PAD>", "<SOS>", "<EOS>"])
         self.word2index = {"<PAD>" : 0, "<SOS>" : 1, "<EOS>" : 2}
         self.index2word = ["<PAD>", "<SOS>", "<EOS>"]
-        self.word2count = {}
         self.vocab_size = 3
         self.x_train = list()
         self.y_train = list()
@@ -26,8 +25,6 @@ class Data_Preprocess(object):
         self.y_val = list()
         self.train_lengths = []
         self.val_lengths = []
-        self.dialogue_cols = ['dialogue1', 'dialogue2']
-        self.use_cuda = torch.cuda.is_available()
         self.run()
 
     def load_vocabulary(self):
@@ -41,80 +38,65 @@ class Data_Preprocess(object):
 
     def load_dialogues(self):
         # Load training and test set
-        train_df = pd.read_csv(path.join(self.path, 'train.txt'), sep='|')
-        val_df = pd.read_csv(path.join(self.path, 'val.txt'), sep='|')
+        train_path = path.join(self.path, 'train.txt')
+        val_path = path.join(self.path, 'val.txt')
 
+        train_seq = [[], []]
+        val_seq = [[], []]
         lengths = []
 
         # Iterate over dialogues of both training and test datasets
-        for dataset in [train_df, val_df]:
-            for index, row in dataset.iterrows():
-                # Iterate through the text of both the dialogues of the row
-                for dialogue in self.dialogue_cols:
-                    d2n = []  # Dialogue Numbers Representation
-                    for i, word_id in enumerate(row[dialogue].split()):
-                        ''' No concept of Person ID during Pre-Training '''
+        for datafile, datalist in zip([train_path, val_path], [train_seq, val_seq]):
+            with open(datafile) as file:
+                lines = file.readlines()
 
-                        effective_id = int(word_id) + 2
-                        word = self.index2word[effective_id]
+                for line in lines:
+                    line = line.split('|')
 
-                        d2n.append(effective_id)
-                        if word not in self.word2count:
-                            self.word2count[word] = 0
-                        self.word2count[word] += 1
+                    dialogue = line[0].split()
+                    response = line[1].split()
+                    len_x = len(dialogue)
+                    len_y = len(response)
 
-                    # Replace |questions as word| to |question as number| representation
-                    # Add <EOS> token at end of dialogue.
-                    dataset.at[index, dialogue] = d2n + [self.EOS_token]
+                    if len_x <= self.min_length or len_x >= self.max_length or \
+                       len_y <= self.min_length or len_y >= self.max_length:
+                       continue
 
-        return train_df, val_df
+                    ''' No concept of Person ID during Pre-Training '''
+                    datalist[0].append([self.SOS_token] + [int(word) + 2 for word in dialogue])
+                    datalist[1].append([int(word) + 2 for word in response] + [self.EOS_token])
 
-    def len_check(self, x, y):
-        len_x = len(x)
-        len_y = len(y)
+        return train_seq, val_seq
 
-        if len_x >= self.min_length and len_x <= self.max_length and \
-           len_y >= self.min_length and len_y <= self.max_length:
-           return True
-
-        return False
-
-    def filter_and_tensor(self, pairs):
-        cleaned_pairs = [[], []]
+    def convert_to_tensor(self, pairs):
+        tensor_pairs = [[], []]
         lengths = []
 
         for i, tup in enumerate(pairs):
-            if not self.len_check(tup[0], tup[1]):
-                continue
+            tensor_pairs[0].append(torch.LongTensor(tup[0]))
+            tensor_pairs[1].append(torch.LongTensor(tup[1]))
+            lengths.append(len(tensor_pairs[0][-1]))
 
-            cleaned_pairs[0].append(torch.LongTensor(tup[0]))
-            cleaned_pairs[1].append(torch.LongTensor(tup[1]))
+        return tensor_pairs[0], tensor_pairs[1], lengths
 
-            lengths.append(len(cleaned_pairs[0][-1]))
-
-        return cleaned_pairs[0], cleaned_pairs[1], lengths
-
-    def sort_filter_tensor(self):
+    def sort_and_tensor(self):
         xy_train = sorted(zip(self.x_train, self.y_train), key=lambda tup: len(tup[0]), reverse=True)
         xy_val = sorted(zip(self.x_val, self.y_val), key=lambda tup: len(tup[0]), reverse=True)
 
-        self.x_train, self.y_train, self.train_lengths = self.filter_and_tensor(xy_train)
-        self.x_val, self.y_val, self.val_lengths = self.filter_and_tensor(xy_val)
+        self.x_train, self.y_train, self.train_lengths = self.convert_to_tensor(xy_train)
+        self.x_val, self.y_val, self.val_lengths = self.convert_to_tensor(xy_val)
 
     def run(self):
         print('Loading vocabulary.')
         self.load_vocabulary()
 
         print('Loading data.')
-        train_df, val_df = self.load_dialogues()
+        train_seq, val_seq = self.load_dialogues()
 
-        x_train = train_df[self.dialogue_cols]
-        x_val = val_df[self.dialogue_cols]
+        # Split to separate lists.
+        self.x_train = train_seq[0]
+        self.y_train = train_seq[1]
+        self.x_val = val_seq[0]
+        self.y_val = val_seq[1]
 
-        # Split to lists
-        self.x_train = x_train.dialogue1.values.tolist()
-        self.y_train = x_train.dialogue2.values.tolist()
-        self.x_val = x_val.dialogue1.values.tolist()
-        self.y_val = x_val.dialogue2.values.tolist()
-
-        self.sort_filter_tensor()
+        self.sort_and_tensor()

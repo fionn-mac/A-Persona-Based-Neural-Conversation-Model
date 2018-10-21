@@ -14,14 +14,15 @@ use_cuda = torch.cuda.is_available()
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-n", "--num_iters", type=int, help="Number of iterations over the training set.", default=7)
-    parser.add_argument("-nl", "--num_layers", type=int, help="Number of layers in Encoder and Decoder", default=3)
-    parser.add_argument("-z", "--hidden_size", type=int, help="GRU Hidden State Size", default=256)
-    parser.add_argument("-b", "--batch_size", type=int, help="Batch Size", default=32)
-    parser.add_argument("-lr", "--learning_rate", type=float, help="Learning rate of optimiser.", default=0.001)
+    parser.add_argument("-n", "--num_iters", type=int, help="Number of iterations over the training set.", default=10)
+    parser.add_argument("-nl", "--num_layers", type=int, help="Number of layers in Encoder and Decoder", default=2)
+    parser.add_argument("-z", "--hidden_size", type=int, help="GRU Hidden State Size", default=512)
+    parser.add_argument("-b", "--batch_size", type=int, help="Batch Size", default=128)
+    parser.add_argument("-lr", "--learning_rate", type=float, help="Learning rate of optimiser.", default=1)
+    parser.add_argument("-dr", "--dropout", type=float, help="Dropout in decoder.", default=0.2)
 
     parser.add_argument("-l0", "--min_length", type=int, help="Minimum Sentence Length.", default=5)
-    parser.add_argument("-l1", "--max_length", type=int, help="Maximum Sentence Length.", default=20)
+    parser.add_argument("-l1", "--max_length", type=int, help="Maximum Sentence Length.", default=50)
     parser.add_argument("-f", "--fold_size", type=int, help="Size of chunks into which training data must be broken.", default=500000)
     parser.add_argument("-tm", "--track_minor", type=bool, help="Track change in loss per cent of Epoch.", default=True)
     parser.add_argument("-tp", "--tracking_pair", type=bool, help="Track change in outputs over a randomly chosen sample.", default=True)
@@ -48,12 +49,12 @@ if __name__ == "__main__":
     print('Creating Word Embedding.')
 
     ''' Use pre-trained word embeddings '''
-    embedding = Get_Embedding(data_p.word2index, data_p.word2count, args.embedding_file)
+    embedding = Get_Embedding(data_p.word2index, args.embedding_file)
 
     encoder = Encoder_RNN(args.hidden_size, embedding.embedding_matrix, batch_size=args.batch_size,
-                          num_layers=args.num_layers, use_embedding=True, train_embedding=False)
+                          num_layers=args.num_layers, use_embedding=True, train_embedding=True)
     decoder = Decoder_RNN(args.hidden_size, embedding.embedding_matrix, num_layers=args.num_layers,
-                          use_embedding=True, train_embedding=False, dropout_p=0.1)
+                          use_embedding=True, train_embedding=True, dropout_p=args.dropout)
 
     # Delete embedding object post weight initialization in encoder and decoder
     del embedding

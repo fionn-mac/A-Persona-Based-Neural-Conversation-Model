@@ -52,9 +52,6 @@ class Run_Iterations(object):
         encoder_trainable_parameters = list(filter(lambda p: p.requires_grad, self.model.encoder.parameters()))
         decoder_trainable_parameters = list(filter(lambda p: p.requires_grad, self.model.decoder.parameters()))
 
-        encoder_optimizer = optim.RMSprop(encoder_trainable_parameters, lr=self.learning_rate)
-        decoder_optimizer = optim.RMSprop(decoder_trainable_parameters, lr=self.learning_rate)
-
         if self.tracking_pair:
             ind = random.randint(0, self.train_samples)
             self.tracking_pair = [self.train_in_seq[ind], self.train_out_seq[ind], self.train_in_seq[ind].size()[0]]
@@ -80,6 +77,10 @@ class Run_Iterations(object):
 
         fold_number = 1 # Keep track of fold over which model is training.
         for in_fold, out_fold, fold_lengths in zip(self.train_in_seq, self.train_out_seq, self.train_lengths):
+            # Initialze Optimizers
+            encoder_optimizer = optim.Adam(encoder_trainable_parameters, lr=self.learning_rate)
+            decoder_optimizer = optim.Adam(decoder_trainable_parameters, lr=self.learning_rate)
+
             # Convert fold contents to cuda
             if self.use_cuda:
                 in_fold = self.help_fn.to_cuda(in_fold)
@@ -91,6 +92,8 @@ class Run_Iterations(object):
             print('Starting Fold                 :', fold_number)
 
             for epoch in range(1, self.num_iters + 1):
+                has_reduced = False
+
                 for i in range(0, fold_size, self.batch_size):
                     input_variables = in_fold[i : i + self.batch_size] # Batch Size x Sequence Length
                     target_variables = out_fold[i : i + self.batch_size]
@@ -103,10 +106,22 @@ class Run_Iterations(object):
 
                     if self.track_minor and i > 0 and (i - self.batch_size) // fraction < i // fraction:
                         now = time.time()
-                        print('Completed %.4f Percent of Epoch %d in %s Minutes' % ((i + self.batch_size) / fold_size * 100,
-                                                                                    epoch, self.help_fn.as_minutes(now - start)))
+                        print('Completed %.4f Percent of Epoch %d in %s' % ((i + self.batch_size) / fold_size * 100,
+                                                                            epoch, self.help_fn.as_minutes(now - start)))
+
+                    # if epoch >= 0 and not has_reduced and i >= fold_size / 2:
+                    #     learning_rate *= 0.90
+                    #     encoder_optimizer = optim.Adam(encoder_trainable_parameters, lr=learning_rate)
+                    #     decoder_optimizer = optim.Adam(decoder_trainable_parameters, lr=learning_rate)
+                    #     has_reduced = True
+
+                if epoch % 5 == 0:
+                    self.learning_rate *= 0.80
+                    encoder_optimizer = optim.Adam(encoder_trainable_parameters, lr=self.learning_rate)
+                    decoder_optimizer = optim.Adam(decoder_trainable_parameters, lr=self.learning_rate)
 
                 if self.tracking_pair: self.evaluate_specific(*self.tracking_pair)
+                # self.evaluate_randomly()
 
                 if epoch % self.print_every == 0:
                     print_loss_avg = print_loss_total / self.print_every
@@ -141,6 +156,9 @@ class Run_Iterations(object):
             target_index = output_words[0].index('<EOS>') + 1
         except ValueError:
             target_index = len(output_words[0])
+
+        # TODO: Remove this false target_index
+        target_index = len(output_words[0])
 
         output_words = output_words[0][:target_index]
         attentions = attentions[0, :target_index, :].view(target_index, -1)
