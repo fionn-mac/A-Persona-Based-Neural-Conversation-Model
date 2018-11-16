@@ -166,7 +166,7 @@ class Run_Iterations(Base_Class):
         output_sentence = ' '.join(output_words)
         print('<', output_sentence)
 
-        print('BLEU Score', bleu_score.corpus_bleu([output_sentence], [response]))
+        # print('BLEU Score', bleu_score.corpus_bleu([output_sentence], [response]))
         self.help_fn.show_attention(dialogue, output_words, attentions, name=name)
 
     def evaluate_randomly(self, n=10):

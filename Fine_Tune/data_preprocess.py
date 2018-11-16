@@ -55,8 +55,8 @@ class Data_Preprocess(Base_Class):
 
                     datalist[0][0].append([self.SOS_token] + [int(word) + 2 for word in dialogue])
                     datalist[0][1].append([int(word) + 2 for word in response] + [self.EOS_token])
-                    datalist[1].append(speaker)
-                    datalist[2].append(addressee)
+                    datalist[1].append(int(speaker))
+                    datalist[2].append(int(addressee))
 
         return train_seq, val_seq
 
@@ -68,13 +68,13 @@ class Data_Preprocess(Base_Class):
             if person not in self.people:
                 self.people.add(person)
 
-    def filter_and_tensor(self, quadruplets):
+    def convert_to_tensor(self, quadruplets):
         tensor_pairs = [[], []]
         lengths = []
         speakers = []
         addressees = []
 
-        for i, tup in enumerate(pairs):
+        for i, tup in enumerate(quadruplets):
             tensor_pairs[0].append(torch.LongTensor(tup[0]))
             tensor_pairs[1].append(torch.LongTensor(tup[1]))
             lengths.append(len(tensor_pairs[0][-1]))
@@ -85,7 +85,7 @@ class Data_Preprocess(Base_Class):
         speakers = torch.LongTensor(speakers)
         addressees = torch.LongTensor(addressees)
 
-        return cleaned_pairs[0], cleaned_pairs[1], lengths, speakers, addressees
+        return tensor_pairs[0], tensor_pairs[1], lengths, speakers, addressees
 
     def sort_and_tensor(self):
         xysa_train = sorted(zip(self.x_train, self.y_train, self.train_speakers, self.train_addressees), key=lambda tup: len(tup[0]), reverse=True)

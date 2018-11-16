@@ -29,6 +29,9 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--dataset", type=str, help="Dataset directory.", default='../Datasets/OpenSubtitles/')
     parser.add_argument("-e", "--embedding_file", type=str, help="File containing word embeddings.", default='../../Embeddings/GoogleNews/GoogleNews-vectors-negative300.bin.gz')
 
+    parser.add_argument("-ep", "--encoder_parameters", type=str, help="Name of file containing encoder parameters.", default='encoder.pt')
+    parser.add_argument("-dp", "--decoder_parameters", type=str, help="Name of file containing decoder parameters.", default='decoder.pt')
+
     args = parser.parse_args()
 
     print('Model Parameters:')
@@ -74,5 +77,8 @@ if __name__ == "__main__":
     run_iterations.train_iters()
     run_iterations.evaluate_randomly()
 
-    torch.save(encoder.state_dict(), './encoder.pt')
-    torch.save(decoder.state_dict(), './decoder.pt')
+    if not args.encoder_parameters.endswith('.pt'): args.encoder_parameters += '.pt'
+    if not args.decoder_parameters.endswith('.pt'): args.decoder_parameters += '.pt'
+
+    torch.save(encoder.state_dict(), args.encoder_parameters)
+    torch.save(decoder.state_dict(), args.decoder_parameters)

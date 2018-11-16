@@ -22,7 +22,7 @@ class Get_Embedding(object):
                 continue
             embedding_matrix[i] = word2vec.word_vec(word)
 
-        print('%d word were not present in Google Word2Vec' % count)
+        print('%d words were not present in Google Word2Vec' % count)
         del word2vec
 
         embedding_matrix = torch.from_numpy(embedding_matrix).type(torch.FloatTensor)

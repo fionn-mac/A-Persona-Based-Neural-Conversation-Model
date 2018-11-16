@@ -3,7 +3,7 @@ import random
 import torch
 
 class Train_Network(object):
-    def __init__(self, encoder, decoder, index2word, num_layers=1, teacher_forcing_ratio=0.5):
+    def __init__(self, encoder, decoder, index2word, num_layers=1, teacher_forcing_ratio=1.0):
         self.encoder = encoder
         self.decoder = decoder
         self.index2word = index2word
@@ -23,8 +23,8 @@ class Train_Network(object):
         target_length = target_variables.size()[0]
         batch_size = target_variables.size()[1]
 
-        if encoder_optimizer: encoder_optimizer.zero_grad()
-        if decoder_optimizer: decoder_optimizer.zero_grad()
+        encoder_optimizer.zero_grad()
+        decoder_optimizer.zero_grad()
         loss = 0
 
         encoder_hidden = self.encoder.init_hidden(batch_size)

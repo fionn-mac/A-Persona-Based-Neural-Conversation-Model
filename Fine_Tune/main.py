@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-n", "--num_iters", type=int, help="Number of iterations over the training set.", default=7)
+    parser.add_argument("-n", "--num_iters", type=int, help="Number of iterations over the training set.", default=20)
     parser.add_argument("-nl", "--num_layers", type=int, help="Number of layers in Encoder and Decoder", default=2)
     parser.add_argument("-z", "--hidden_size", type=int, help="GRU Hidden State Size", default=512)
     parser.add_argument("-pz", "--persona_size", type=int, help="Persona Vector Size", default=128)
@@ -45,7 +45,9 @@ if __name__ == "__main__":
     parser.add_argument("-tm", "--track_minor", type=bool, help="Track change in loss per cent of Epoch.", default=True)
     parser.add_argument("-tp", "--tracking_pair", type=bool, help="Track change in outputs over a randomly chosen sample.", default=True)
     parser.add_argument("-d", "--dataset", type=str, help="Dataset directory.", default='../Datasets/Friends/')
-    parser.add_argument("-e", "--embedding_file", type=str, help="File containing word embeddings.", default='../../Embeddings/GoogleNews/GoogleNews-vectors-negative300.bin.gz')
+
+    parser.add_argument("-ep", "--encoder_parameters", type=str, help="Name of file containing encoder parameters.", default='encoder.pt')
+    parser.add_argument("-dp", "--decoder_parameters", type=str, help="Name of file containing decoder parameters.", default='decoder.pt')
 
     args = parser.parse_args()
 
@@ -71,9 +73,15 @@ if __name__ == "__main__":
     decoder = Decoder_RNN(args.hidden_size, (len(data_p.word2index), 300), (personas, args.persona_size),
                           num_layers=args.num_layers, use_embedding=False, train_embedding=True, dropout_p=args.dropout)
 
-    if path.isfile('../Pre-Train/encoder.pt') and path.isfile('../Pre-Train/decoder.pt'):
-        load_weights(encoder, torch.load('../Pre-Train/encoder.pt'))
-        load_weights(decoder, torch.load('../Pre-Train/decoder.pt'))
+    if not args.encoder_parameters.endswith('.pt'): args.encoder_parameters += '.pt'
+    if not args.decoder_parameters.endswith('.pt'): args.decoder_parameters += '.pt'
+
+    args.encoder_parameters = path.join('../Pre_Train/', args.encoder_parameters)
+    args.decoder_parameters = path.join('../Pre_Train/', args.decoder_parameters)
+
+    if path.isfile(args.encoder_parameters) and path.isfile(args.decoder_parameters):
+        load_weights(encoder, torch.load(args.encoder_parameters))
+        load_weights(decoder, torch.load(args.decoder_parameters))
 
     else:
         print('One or more of the model parameter files are missing. Results will not be good.')

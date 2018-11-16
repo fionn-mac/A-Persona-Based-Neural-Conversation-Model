@@ -9,3 +9,4 @@ Pre_Train/Not\ Working
 Pre_Train/*.pt
 Pre_Train/*.txt
 Pre_Train/*.png
+persona_pre_train.sh

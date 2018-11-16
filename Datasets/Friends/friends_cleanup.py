@@ -7,17 +7,21 @@ from nltk import word_tokenize
 
 data = []
 word2ind = {}
-vocab = []
+vocab = set()
 actors = {"ross" : 1,  "monica" : 2, "joey" : 3, "rachel" : 4, "chandler" : 5, "phoebe" : 6, "cameo" : 7}
 ind2actor = ["ross",  "monica", "joey", "rachel", "chandler", "phoebe", "cameo"]
 
-train_file = open("friends_train.txt", "w")
-dev_file = open("friends_dev.txt", "w")
-vocab_file = open("vocabulary.txt", "w")
-cast_file = open("cast.txt", "w")
+with open("vocabulary.txt", "r") as f:
+    lines = f.readlines()
 
-train_file.write('dialogue1|dialogue2\n')
-dev_file.write('dialogue1|dialogue2\n')
+    for i, line in enumerate(lines):
+        word = line.strip()
+        vocab.add(word)
+        word2ind[word] = str(i + 1)
+
+train_file = open("train.txt", "w")
+dev_file = open("val.txt", "w")
+cast_file = open("cast.txt", "w")
 
 # Turn a Unicode string to plain ASCII, thanks to
 # http://stackoverflow.com/a/518232/2809427
@@ -54,12 +58,10 @@ with open('dialogue.csv') as f:
                 if i%2:
                     # Tokenize response string.
                     val = word_tokenize(val)
-                    for word in val:
-                        if word not in word2ind:
-                            vocab.append(word)
-                            word2ind[word] = str(len(vocab))
+                    for j, word in enumerate(val):
+                        if word not in vocab:
+                            val[j] = 'UNK'
 
-                    # print(val)
                     dialogue_pair[i] = ' '.join([word2ind[word] for word in val])
 
                 # Speaker name is at odd indices in dialogue_pair array.
@@ -91,11 +93,6 @@ for i, convo in enumerate(data):
         train_file.write(convo + '\n')
     else:
         dev_file.write(convo + '\n')
-
-print('Writing Vocabulary')
-
-for word in vocab:
-    vocab_file.write(word + '\n')
 
 print('Writing Actors')
 

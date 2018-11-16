@@ -48,7 +48,7 @@ class Data_Preprocess(object):
         # Iterate over dialogues of both training and test datasets
         for datafile, datalist in zip([train_path, val_path], [train_seq, val_seq]):
             with open(datafile) as file:
-                lines = file.readlines()
+                lines = file.readlines()[:4000000]
 
                 for line in lines:
                     line = line.split('|')

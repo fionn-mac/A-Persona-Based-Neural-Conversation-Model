@@ -35,7 +35,7 @@ class Run_Iterations(object):
         self.train_lengths = train_lengths
         self.train_samples = len(self.train_in_seq)
 
-        # valelopment data.
+        # Validation data.
         self.val_in_seq = val_in_seq
         self.val_out_seq = val_out_seq
         self.val_lengths = val_lengths
@@ -72,26 +72,28 @@ class Run_Iterations(object):
         self.train_lengths = fold_lengths
         del in_folds, out_folds, fold_lengths
 
+        # Initialze Optimizers
+        encoder_optimizer = optim.Adam(encoder_trainable_parameters, lr=self.learning_rate)
+        decoder_optimizer = optim.Adam(decoder_trainable_parameters, lr=self.learning_rate)
+
         print('Number of folds               :', len(self.train_in_seq), '\n')
         print('Beginning Model Training.')
 
-        fold_number = 1 # Keep track of fold over which model is training.
-        for in_fold, out_fold, fold_lengths in zip(self.train_in_seq, self.train_out_seq, self.train_lengths):
-            # Initialze Optimizers
-            encoder_optimizer = optim.Adam(encoder_trainable_parameters, lr=self.learning_rate)
-            decoder_optimizer = optim.Adam(decoder_trainable_parameters, lr=self.learning_rate)
+        for epoch in range(1, self.num_iters + 1):
+            fold_number = 1 # Keep track of fold over which model is training.
+            has_halved = False
 
-            # Convert fold contents to cuda
-            if self.use_cuda:
-                in_fold = self.help_fn.to_cuda(in_fold)
-                out_fold = self.help_fn.to_cuda(out_fold)
+            for in_fold, out_fold, fold_lengths in zip(self.train_in_seq, self.train_out_seq, self.train_lengths):
+                # Convert fold contents to cuda
+                if self.use_cuda:
+                    in_fold = self.help_fn.to_cuda(in_fold)
+                    out_fold = self.help_fn.to_cuda(out_fold)
 
-            fold_size = len(in_fold)
-            fraction = fold_size // 10
+                fold_size = len(in_fold)
+                fraction = fold_size // 10
 
-            print('Starting Fold                 :', fold_number)
+                print('Starting Fold                 :', fold_number)
 
-            for epoch in range(1, self.num_iters + 1):
                 for i in range(0, fold_size, self.batch_size):
                     input_variables = in_fold[i : i + self.batch_size] # Batch Size x Sequence Length
                     target_variables = out_fold[i : i + self.batch_size]
@@ -104,33 +106,46 @@ class Run_Iterations(object):
 
                     if self.track_minor and i > 0 and (i - self.batch_size) // fraction < i // fraction:
                         now = time.time()
-                        print('Completed %.4f Percent of Epoch %d in %s' % ((i + self.batch_size) / fold_size * 100,
-                                                                            epoch, self.help_fn.as_minutes(now - start)))
+                        print('Completed %.4f Percent of Fold %d in %s' % ((i + self.batch_size) / fold_size * 100,
+                                                                            fold_number, self.help_fn.as_minutes(now - start)))
 
-                if epoch % 5 == 0:
-                    self.learning_rate = max(self.learning_rate * 0.80, 0.001)
+                if epoch >= 6 and epoch <= 10 and not has_halved and fold_number >= len(self.train_in_seq) / 2:
+                    self.learning_rate /= 2
                     encoder_optimizer = optim.Adam(encoder_trainable_parameters, lr=self.learning_rate)
                     decoder_optimizer = optim.Adam(decoder_trainable_parameters, lr=self.learning_rate)
+                    has_halved = True
 
-                if self.tracking_pair: self.evaluate_specific(*self.tracking_pair)
+                fold_number += 1
+                print(print_loss_total)
 
-                if epoch % self.print_every == 0:
-                    print_loss_avg = print_loss_total / self.print_every
-                    print_loss_total = 0
-                    print('%s (%d %d%%) %.4f' % (self.help_fn.time_slice(start, epoch / self.num_iters),
-                                                 epoch, epoch / self.num_iters * 100, print_loss_avg))
+                del in_fold, out_fold
 
-                if epoch % self.plot_every == 0:
-                    plot_loss_avg = plot_loss_total / self.plot_every
-                    plot_losses.append(plot_loss_avg)
-                    plot_loss_total = 0
+            if epoch >= 6 and epoch <= 10:
+                self.learning_rate /= 2
+                encoder_optimizer = optim.Adam(encoder_trainable_parameters, lr=self.learning_rate)
+                decoder_optimizer = optim.Adam(decoder_trainable_parameters, lr=self.learning_rate)
 
-            # Convert fold contents back to cpu
-            if self.use_cuda:
-                in_fold = self.help_fn.to_cpu(in_fold)
-                out_fold = self.help_fn.to_cpu(out_fold)
+            if self.tracking_pair:
+                self.model.encoder.eval()
+                self.model.decoder.eval()
 
-            # self.help_fn.show_plot(plot_losses)
+                self.evaluate_specific(*self.tracking_pair)
+
+                self.model.encoder.train()
+                self.model.decoder.train()
+
+            if epoch % self.print_every == 0:
+                print_loss_avg = print_loss_total / self.print_every
+                print_loss_total = 0
+                print('%s (%d %d%%) %.4f' % (self.help_fn.time_slice(start, epoch / self.num_iters),
+                                             epoch, epoch / self.num_iters * 100, print_loss_avg))
+
+            if epoch % self.plot_every == 0:
+                plot_loss_avg = plot_loss_total / self.plot_every
+                plot_losses.append(plot_loss_avg)
+                plot_loss_total = 0
+
+        # self.help_fn.show_plot(plot_losses)
 
     def evaluate(self, in_seq, out_seq, lengths):
         loss, output_words, attentions = self.model.evaluate(in_seq, out_seq, lengths, self.criterion)
@@ -157,10 +172,13 @@ class Run_Iterations(object):
         output_sentence = ' '.join(output_words)
         print('<', output_sentence)
 
-        print('BLEU Score', bleu_score.corpus_bleu([output_sentence], [response]))
+        # print('BLEU Score', bleu_score.corpus_bleu([output_sentence], [response]))
         self.help_fn.show_attention(dialogue, output_words, attentions, name=name)
 
     def evaluate_randomly(self, n=10):
+        self.model.encoder.eval()
+        self.model.decoder.eval()
+
         if self.use_cuda:
             self.val_in_seq = self.help_fn.to_cuda(self.val_in_seq)
             self.val_out_seq = self.help_fn.to_cuda(self.val_out_seq)
@@ -171,3 +189,6 @@ class Run_Iterations(object):
             ind = random.randrange(self.val_samples)
             self.evaluate_specific(self.val_in_seq[ind], self.val_out_seq[ind],
                                    len(self.val_in_seq[ind]), name=str(i))
+
+        self.model.encoder.train()
+        self.model.decoder.train()
